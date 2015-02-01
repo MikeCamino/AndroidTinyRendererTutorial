@@ -73,12 +73,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param c {@link android.graphics.Canvas} to draw on
      */
     private void draw(Canvas c) {
-        line(13, 20, 80, 40, c, Color.WHITE);
-        line(20, 13, 40, 80, c, Color.RED);
-        line(80, 40, 13, 20, c, Color.RED);
+        for (int i = 0; i < 10000; i++) {
+            line(13, 20, 80, 40, c, Color.WHITE);
+        }
+        //line(20, 13, 40, 80, c, Color.RED);
+        //line(80, 40, 13, 20, c, Color.RED);
     }
 
     private void line(int x0, int y0, int x1, int y1, Canvas c, int color) {
+        // 1-st variant: 2.423s for 10000 iterations
+        // 2-nd variant: 2.549s for 10000 iterations (great optimisation though)
+        // 3-rd variant: 2.784s for 10000 iterations (it seems that float maths are faster than integer here in Java)
+
         final Paint p = new Paint();
         p.setColor(color);
 
@@ -96,15 +102,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
             y0 = (y1 ^= y0 ^= y1) ^ y0;
         }
 
+        // calculating distance and error
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        int derr = Math.abs(dy) * 2;
+        int err = 0;
+
         int x;
-        int y;
+        int y = y0;
+
         for (x = x0; x <= x1; x++) {
-            float t = (x - x0) / (float) (x1 - x0);
-            y = (int) (y0 * (1f - t) + y1 * t);
             if (steep) {
                 c.drawPoint(y, x, p);
             } else {
                 c.drawPoint(x, y, p);
+            }
+
+            err += derr;
+
+            if (err > dx) {
+                y += y1 > y0 ? 1 : -1;
+                err -= dx * 2;
             }
         }
     }
