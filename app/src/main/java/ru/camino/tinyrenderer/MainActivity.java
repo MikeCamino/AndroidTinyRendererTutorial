@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
@@ -17,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import ru.camino.tinyrenderer.utils.TargaImageReader;
+import ru.camino.tinyrenderer.utils.Timing;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     public static final String TAG = MainActivity.class.getSimpleName();
@@ -26,6 +28,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private static final int CANVAS_HEIGHT = 100;
 
     private ImageView mImageView;
+    private TextView mInfoPanel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +37,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_main);
 
         mImageView = (ImageView) findViewById(R.id.activity_main_image);
+        mInfoPanel = (TextView) findViewById(R.id.activity_main_info);
         findViewById(R.id.activity_main_btn_fit).setOnClickListener(this);
         findViewById(R.id.activity_main_btn_1x).setOnClickListener(this);
 
@@ -87,10 +91,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private class DrawAsyncTask extends AsyncTask<Void, Integer, Void> {
         private Bitmap mBitmap;
         private Canvas mCanvas;
+        private Timing mDrawTiming;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+
+            mDrawTiming = new Timing("Draw time");
+            mDrawTiming.start();
 
             // Bitmap to draw into
             mBitmap = Bitmap.createBitmap(CANVAS_WIDTH, CANVAS_HEIGHT, Bitmap.Config.ARGB_8888);
@@ -115,6 +123,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
             super.onPostExecute(aVoid);
 
             mImageView.setImageBitmap(mBitmap);
+
+            mDrawTiming.stop();
+            mInfoPanel.setText(mDrawTiming.toString());
         }
     }
 }
