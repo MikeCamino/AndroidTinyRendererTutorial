@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import ru.camino.tinyrenderer.utils.ObjModel;
 import ru.camino.tinyrenderer.utils.TargaImageReader;
 import ru.camino.tinyrenderer.utils.Timing;
 
@@ -25,8 +26,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static final String TAG = MainActivity.class.getSimpleName();
 
     // Change these values to match desired canvas size
-    private static final int CANVAS_WIDTH = 100;
-    private static final int CANVAS_HEIGHT = 100;
+    private static final int CANVAS_WIDTH = 1000;
+    private static final int CANVAS_HEIGHT = 1000;
 
     private ImageView mImageView;
     private TextView mInfoPanel;
@@ -52,6 +53,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             e.printStackTrace();
         }
         */
+
     }
 
     @Override
@@ -73,17 +75,34 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param c {@link android.graphics.Canvas} to draw on
      */
     private void draw(Canvas c) {
-        for (int i = 0; i < 10000; i++) {
-            line(13, 20, 80, 40, c, Color.WHITE);
+        ObjModel om;
+        try {
+            om = new ObjModel(this, "african_head.obj.txt");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
         }
-        //line(20, 13, 40, 80, c, Color.RED);
-        //line(80, 40, 13, 20, c, Color.RED);
+
+
+        for (ObjModel.Face f : om.faces) {
+            for (int i = 0; i < 3; i++) {
+                ObjModel.Vertice v0 = om.vertices.get(f.vertices[i]);
+                ObjModel.Vertice v1 = om.vertices.get(f.vertices[(i + 1) % 3]);
+
+                int x0 = (int) ((v0.x + 1f) * CANVAS_WIDTH / 2f);
+                int y0 = (int) ((v0.y + 1f) * CANVAS_HEIGHT / 2f);
+                int x1 = (int) ((v1.x + 1f) * CANVAS_WIDTH / 2f);
+                int y1 = (int) ((v1.y + 1f) * CANVAS_HEIGHT / 2f);
+
+                line(x0, y0, x1, y1, c, Color.WHITE);
+            }
+        }
     }
 
     private void line(int x0, int y0, int x1, int y1, Canvas c, int color) {
-        // 1-st variant: 2.423s for 10000 iterations
-        // 2-nd variant: 2.549s for 10000 iterations (great optimisation though)
-        // 3-rd variant: 2.784s for 10000 iterations (it seems that float maths are faster than integer here in Java)
+        // 1-st variant: 2.423s for 10000 iterations (float divisions in a loop)
+        // 2-nd variant: 2.549s for 10000 iterations (float error calc. great optimisation though)
+        // 3-rd variant: 2.784s for 10000 iterations (integer error calc. it seems that float maths are faster than integer ones here in Java)
 
         final Paint p = new Paint();
         p.setColor(color);
