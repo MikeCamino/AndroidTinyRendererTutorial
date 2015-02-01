@@ -5,11 +5,16 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import ru.camino.tinyrenderer.utils.TargaImageReader;
 
@@ -32,17 +37,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         findViewById(R.id.activity_main_btn_fit).setOnClickListener(this);
         findViewById(R.id.activity_main_btn_1x).setOnClickListener(this);
 
-        // Bitmap to draw into
-        final Bitmap b = Bitmap.createBitmap(CANVAS_WIDTH, CANVAS_HEIGHT, Bitmap.Config.ARGB_8888);
-        // Canvas to draw on
-        final Canvas c = new Canvas(b);
-
-        // Paint it black to follow the tutorial
-        final Paint p = new Paint();
-        p.setColor(Color.BLACK);
-        c.drawPaint(p);
-
-        draw(c);
+        new DrawAsyncTask().execute((Void[]) null);
 
         /*
         Bitmap b = null;
@@ -52,8 +47,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             e.printStackTrace();
         }
         */
-
-        mImageView.setImageBitmap(b);
     }
 
     @Override
@@ -88,6 +81,40 @@ public class MainActivity extends Activity implements View.OnClickListener {
             int x = (int) (x0 * (1f - t) + x1 * t);
             int y = (int) (y0 * (1f - t) + y1 * t);
             c.drawPoint(x, y, p);
+        }
+    }
+
+    private class DrawAsyncTask extends AsyncTask<Void, Integer, Void> {
+        private Bitmap mBitmap;
+        private Canvas mCanvas;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            // Bitmap to draw into
+            mBitmap = Bitmap.createBitmap(CANVAS_WIDTH, CANVAS_HEIGHT, Bitmap.Config.ARGB_8888);
+            // Canvas to draw on
+            mCanvas = new Canvas(mBitmap);
+
+            // Paint it black to follow the tutorial
+            final Paint p = new Paint();
+            p.setColor(Color.BLACK);
+            mCanvas.drawPaint(p);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            draw(mCanvas);
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            mImageView.setImageBitmap(mBitmap);
         }
     }
 }

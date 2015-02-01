@@ -5,6 +5,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        >
+        <TextView
+            android:id="@+id/activity_main_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+    </LinearLayout>
     <ImageView
         android:id="@+id/activity_main_image"
         android:layout_width="match_parent"
