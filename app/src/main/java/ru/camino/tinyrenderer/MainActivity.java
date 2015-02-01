@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -81,10 +82,30 @@ public class MainActivity extends Activity implements View.OnClickListener {
         final Paint p = new Paint();
         p.setColor(color);
 
-        for (float t = 0f; t < 1f; t += .01) {
-            int x = (int) (x0 * (1f - t) + x1 * t);
-            int y = (int) (y0 * (1f - t) + y1 * t);
-            c.drawPoint(x, y, p);
+        boolean steep = false;
+        if (Math.abs(x0 - x1) < Math.abs(y0 - y1)) {
+            // weird swap of two integers
+            x0 = (y0 ^= x0 ^= y0) ^ x0;
+            x1 = (y1 ^= x1 ^= y1) ^ x1;
+            steep = true;
+        }
+
+        // make line drawing from left to right
+        if (x0 > x1) {
+            x0 = (x1 ^= x0 ^= x1) ^ x0;
+            y0 = (y1 ^= y0 ^= y1) ^ y0;
+        }
+
+        int x;
+        int y;
+        for (x = x0; x <= x1; x++) {
+            float t = (x - x0) / (float) (x1 - x0);
+            y = (int) (y0 * (1f - t) + y1 * t);
+            if (steep) {
+                c.drawPoint(y, x, p);
+            } else {
+                c.drawPoint(x, y, p);
+            }
         }
     }
 
