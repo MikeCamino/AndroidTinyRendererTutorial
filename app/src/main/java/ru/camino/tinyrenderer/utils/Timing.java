@@ -11,12 +11,14 @@ public class Timing {
         mTitle = title;
     }
 
-    public void start() {
+    public Timing start() {
         mStartTime = System.currentTimeMillis();
+		return this;
     }
 
-    public void stop() {
+    public Timing stop() {
         mFinishTime = System.currentTimeMillis();
+		return this;
     }
 
     public long getDurationMillis() {

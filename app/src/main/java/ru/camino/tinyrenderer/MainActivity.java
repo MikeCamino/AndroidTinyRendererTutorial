@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,14 +13,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import ru.camino.tinyrenderer.utils.ObjModel;
-import ru.camino.tinyrenderer.utils.TargaImageReader;
 import ru.camino.tinyrenderer.utils.Timing;
 
 public class MainActivity extends Activity implements View.OnClickListener {
@@ -77,17 +71,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void draw(Canvas c) {
         ObjModel om;
         try {
+			final Timing ml = new Timing("Model load time").start();
             om = new ObjModel(this, "african_head.obj.txt");
-        } catch (Exception e) {
+			Log.d(TAG, ml.stop().toString());
+		} catch (Exception e) {
             e.printStackTrace();
             return;
         }
 
+		final Timing fdt = new Timing("Faces draw time").start();
 
-        for (ObjModel.Face f : om.faces) {
+        int facesCount = 0;
+		for (ObjModel.Face f : om.faces) {
             for (int i = 0; i < 3; i++) {
-                ObjModel.Vertice v0 = om.vertices.get(f.vertices[i]);
-                ObjModel.Vertice v1 = om.vertices.get(f.vertices[(i + 1) % 3]);
+                ObjModel.Vertex v0 = om.vertices.get(f.vertices[i]);
+                ObjModel.Vertex v1 = om.vertices.get(f.vertices[(i + 1) % 3]);
 
                 int x0 = (int) ((v0.x + 1f) * CANVAS_WIDTH / 2f);
                 int y0 = (int) ((v0.y + 1f) * CANVAS_HEIGHT / 2f);
@@ -96,7 +94,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 line(x0, y0, x1, y1, c, Color.WHITE);
             }
+
+			facesCount++;
         }
+
+		Log.d(TAG, "Faces drawn: " + facesCount + ". " + fdt.stop().toString());
     }
 
     private void line(int x0, int y0, int x1, int y1, Canvas c, int color) {
@@ -171,6 +173,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         @Override
         protected Void doInBackground(Void... params) {
+			// Pre-flipping canvas upside-down, because ObjModel coordinates are counting from bottom
+			mCanvas.scale(1, -1, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+
             draw(mCanvas);
 
             return null;

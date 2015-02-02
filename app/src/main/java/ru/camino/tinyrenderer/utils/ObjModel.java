@@ -13,7 +13,7 @@ import java.util.List;
 public class ObjModel {
     public static final String TAG = ObjModel.class.getSimpleName();
 
-    public List<Vertice> vertices;
+    public List<Vertex> vertices;
     public List<Face> faces;
 
     public ObjModel(Context c, String objFileName) throws IOException {
@@ -23,7 +23,7 @@ public class ObjModel {
         final InputStream is = c.getAssets().open(objFileName);
         final BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
-        int linesCount = 0, verticesCount = 0, facesCount = 0;
+        int linesCount = 0;
 
         String line;
 
@@ -34,27 +34,26 @@ public class ObjModel {
             }
             linesCount++;
 
-            if (line.startsWith(Vertice.PREFIX)) {
-                vertices.add(new Vertice(line));
-                verticesCount++;
+            if (line.startsWith(Vertex.PREFIX)) {
+                vertices.add(new Vertex(line));
             } else if (line.startsWith(Face.PREFIX)) {
                 faces.add(new Face(line));
-                facesCount++;
             }
         }
 
-        Log.d(TAG, "File '" + objFileName + "' loaded. Lines: " + linesCount + ", vertices: " + verticesCount + ", faces: " + facesCount);
+        Log.d(TAG, "File '" + objFileName + "' loaded. Lines: " + linesCount + ", vertices: " + vertices.size() + ", faces: " + faces.size());
     }
 
-    public class Vertice {
+    public class Vertex {
         public static final String PREFIX = "v ";
+
+		private static final String TO_STRING_PATTERN = "x=%f, y=%f, z=%f";
 
         public float x;
         public float y;
         public float z;
-        public float w = 1f;
 
-        public Vertice(String s) {
+        public Vertex(String s) {
             if (s.startsWith(PREFIX)) {
                 final String[] ps = s.split(" +");
                 x = Float.parseFloat(ps[1]);
@@ -64,7 +63,12 @@ public class ObjModel {
                 throw new IllegalArgumentException("Wrong line prefix for vertice at '" + s + "'");
             }
         }
-    }
+
+		@Override
+		public String toString() {
+			return String.format(TO_STRING_PATTERN, x, y, z);
+		}
+	}
 
     public class Face {
         public static final String PREFIX = "f ";
